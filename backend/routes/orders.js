@@ -61,5 +61,28 @@ module.exports = (supabase) => {
         }
     });
 
+    // Get all orders for Admin
+    router.get('/admin/:restaurantId', async (req, res) => {
+        try {
+            const { restaurantId } = req.params;
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    *,
+                    order_items (
+                        *,
+                        menu_items (name)
+                    )
+                `)
+                .eq('restaurant_id', restaurantId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            res.json(data);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
     return router;
 };

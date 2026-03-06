@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 const Home = () => {
     const [restaurants, setRestaurants] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCuisine, setSelectedCuisine] = useState('All');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -23,10 +24,14 @@ const Home = () => {
         fetchRestaurants();
     }, []);
 
-    const filteredRestaurants = restaurants.filter(r =>
-        r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.cuisine?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine).filter(Boolean))];
+
+    const filteredRestaurants = restaurants.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.cuisine?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCuisine = selectedCuisine === 'All' || r.cuisine === selectedCuisine;
+        return matchesSearch && matchesCuisine;
+    });
 
     if (loading) {
         return (
@@ -47,17 +52,28 @@ const Home = () => {
                     <p className="text-xl md:text-2xl text-red-50 mb-10 max-w-2xl text-shadow-sm font-medium">
                         Order from the best local restaurants with easy, on-demand delivery.
                     </p>
-                    <div className="relative w-full max-w-xl group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Search className="h-6 w-6 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                    <div className="relative w-full max-w-xl group flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-grow">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Search className="h-6 w-6 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                className="w-full py-4 pl-12 pr-4 bg-white/95 backdrop-blur-sm text-gray-900 rounded-2xl shadow-lg border-2 border-transparent focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/20 text-lg placeholder-gray-500 transition-all font-medium"
+                                placeholder="Search restaurants..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                        <input
-                            type="text"
-                            className="w-full py-4 pl-12 pr-4 bg-white/95 backdrop-blur-sm text-gray-900 rounded-2xl shadow-lg border-2 border-transparent focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/20 text-lg placeholder-gray-500 transition-all font-medium"
-                            placeholder="Search restaurants or cuisines..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                        <select
+                            className="py-4 px-6 bg-white/95 backdrop-blur-sm text-gray-900 rounded-2xl shadow-lg border-2 border-transparent focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/20 text-lg font-medium outline-none"
+                            value={selectedCuisine}
+                            onChange={(e) => setSelectedCuisine(e.target.value)}
+                        >
+                            {cuisines.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
@@ -80,7 +96,7 @@ const Home = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

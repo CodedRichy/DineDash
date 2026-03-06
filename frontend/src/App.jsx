@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import RestaurantMenu from './pages/RestaurantMenu';
 import Checkout from './pages/Checkout';
 import OrderStatus from './pages/OrderStatus';
+import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
         <main className="flex-grow container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/restaurant/:id" element={<RestaurantMenu />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order/:id" element={<OrderStatus />} />
