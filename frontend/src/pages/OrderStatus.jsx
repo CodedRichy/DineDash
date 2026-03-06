@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { supabase } from '../api/supabase';
 import { Package, Clock, Truck, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 const OrderStatus = () => {
@@ -11,6 +12,12 @@ const OrderStatus = () => {
 
     useEffect(() => {
         const fetchOrder = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/login');
+                return;
+            }
+
             try {
                 const response = await api.get(`/orders/${id}`);
                 setOrder(response.data);
@@ -23,10 +30,9 @@ const OrderStatus = () => {
 
         fetchOrder();
 
-        // Polling every 10 seconds to simulate real-time
         const interval = setInterval(fetchOrder, 10000);
         return () => clearInterval(interval);
-    }, [id]);
+    }, [id, navigate]);
 
     if (loading && !order) return (
         <div className="flex justify-center items-center h-64">

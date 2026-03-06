@@ -7,6 +7,10 @@ module.exports = (supabase) => {
     router.post('/', async (req, res) => {
         const { user_id, restaurant_id, total_price, items } = req.body;
 
+        if (!user_id) {
+            return res.status(401).json({ error: "Authentication required to place order." });
+        }
+
         try {
             // 1. Insert Order
             const { data: orderData, error: orderError } = await supabase

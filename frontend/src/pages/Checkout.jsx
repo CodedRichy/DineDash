@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { supabase } from '../api/supabase';
 import { CreditCard, Trash2, ArrowLeft, CheckCircle } from 'lucide-react';
 
 const Checkout = () => {
@@ -9,8 +10,21 @@ const Checkout = () => {
     const [restaurantId, setRestaurantId] = useState(null);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                // Not logged in, redirect to login
+                navigate('/login?redirect=checkout');
+                return;
+            }
+            setUserId(session.user.id);
+        };
+
+        checkUser();
+
         const items = JSON.parse(localStorage.getItem('cart')) || [];
         const resId = localStorage.getItem('restaurant_id');
         setCartItems(items);
@@ -18,16 +32,15 @@ const Checkout = () => {
 
         const sum = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(sum);
-    }, []);
+    }, [navigate]);
 
     const handlePlaceOrder = async () => {
-        if (cartItems.length === 0) return;
+        if (cartItems.length === 0 || !userId) return;
         setLoading(true);
 
         try {
-            // Note: In a real app we'd get the user_id from auth context.
-            // Sending a mock UUID here that passes the uuid format or handle it depending on backend auth logic
             const payload = {
+                user_id: userId,
                 restaurant_id: restaurantId,
                 total_price: total,
                 items: cartItems.map(item => ({
@@ -43,7 +56,7 @@ const Checkout = () => {
             navigate(`/order/${response.data.order.id}`);
         } catch (err) {
             console.error("Failed to place order", err);
-            alert("Error placing order. Ensure backend supports the user_id or test mock data structure.");
+            alert("Error placing order. Please try again.");
         } finally {
             setLoading(false);
         }
