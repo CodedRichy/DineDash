@@ -10,6 +10,15 @@ app.use(cors());
 // Initialize Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// Routes
+const restaurantsRoute = require('./routes/restaurants')(supabase);
+const menuRoute = require('./routes/menu')(supabase);
+const ordersRoute = require('./routes/orders')(supabase);
+
+app.use('/api/restaurants', restaurantsRoute);
+app.use('/api/menu', menuRoute);
+app.use('/api/orders', ordersRoute);
+
 // Default Route
 app.get('/', (req, res) => {
     res.send('DineDash API is live.');
