@@ -15,6 +15,7 @@ const AdminDashboard = () => {
     // Auth & loading
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
 
     // Menu form state
     const [isEditing, setIsEditing] = useState(false);
@@ -27,18 +28,40 @@ const AdminDashboard = () => {
                 navigate('/login');
                 return;
             }
+
+            // Check Profile Role
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (!profileData || (profileData.role !== 'manager' && profileData.role !== 'super_admin')) {
+                // Not an admin or manager, kick them back to home
+                navigate('/');
+                return;
+            }
+
+            setProfile(profileData);
             setUser(session.user);
-            fetchInitialData();
+            fetchInitialData(profileData);
         };
         checkAuth();
     }, [navigate]);
 
-    const fetchInitialData = async () => {
+    const fetchInitialData = async (userProfile) => {
         try {
             const resData = await api.get('/restaurants');
-            setRestaurants(resData.data);
-            if (resData.data.length > 0) {
-                const firstRes = resData.data[0];
+            let list = resData.data;
+
+            // If manager, only show their assigned restaurant
+            if (userProfile?.role === 'manager' && userProfile?.managed_restaurant_id) {
+                list = list.filter(r => r.id === userProfile.managed_restaurant_id);
+            }
+
+            setRestaurants(list);
+            if (list.length > 0) {
+                const firstRes = list[0];
                 setSelectedRes(firstRes.id);
                 fetchResDetails(firstRes.id);
             }

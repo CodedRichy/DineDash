@@ -5,17 +5,27 @@ import { supabase } from '../api/supabase';
 
 const Navbar = () => {
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
+        const fetchProfile = async (u) => {
+            if (!u) return setProfile(null);
+            const { data } = await supabase.from('profiles').select('*').eq('id', u.id).single();
+            setProfile(data);
+        };
+
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user || null);
+            if (session?.user) fetchProfile(session.user);
         });
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user || null);
+            const currentUser = session?.user || null;
+            setUser(currentUser);
+            fetchProfile(currentUser);
         });
 
         return () => subscription.unsubscribe();
@@ -25,6 +35,9 @@ const Navbar = () => {
         await supabase.auth.signOut();
         navigate('/login');
     };
+
+    const isAdminOrManager = profile?.role === 'manager' || profile?.role === 'super_admin';
+    const isDelivery = profile?.role === 'delivery_partner';
 
     return (
         <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -41,7 +54,12 @@ const Navbar = () => {
 
                     {user ? (
                         <>
-                            <Link to="/admin" className="text-gray-700 hover:text-red-600 transition font-medium">Dashboard</Link>
+                            {isAdminOrManager && (
+                                <Link to="/admin" className="text-gray-700 hover:text-red-600 transition font-medium">Dashboard</Link>
+                            )}
+                            {isDelivery && (
+                                <Link to="/rider" className="text-gray-700 hover:text-red-600 transition font-medium">Rider Portal</Link>
+                            )}
                             <button onClick={handleLogout} className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition font-medium">
                                 <LogOut size={22} />
                                 <span className="hidden sm:inline-block">Logout</span>
