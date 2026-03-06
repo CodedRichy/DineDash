@@ -1,7 +1,7 @@
 -- Create Profiles table
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    role TEXT DEFAULT 'consumer' CHECK (role IN ('consumer', 'manager', 'super_admin')),
+    role TEXT DEFAULT 'consumer' CHECK (role IN ('consumer', 'manager', 'super_admin', 'delivery_partner')),
     managed_restaurant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
