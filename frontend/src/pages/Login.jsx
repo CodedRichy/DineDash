@@ -40,27 +40,27 @@ const Login = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">
+        <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-gray-100 dark:border-white/5">
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-6 text-center">
                 {mode === 'login' ? 'Welcome Back' : 'Create an Account'}
             </h2>
             <form onSubmit={handleAuth} className="space-y-6">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-400 mb-2">Email</label>
                     <input
                         type="email"
                         required
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-colors"
+                        className="w-full bg-transparent dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 dark:text-white rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-colors"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-400 mb-2">Password</label>
                     <input
                         type="password"
                         required
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-colors"
+                        className="w-full bg-transparent dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 dark:text-white rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-colors"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -78,7 +78,7 @@ const Login = () => {
                     {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Sign Up')}
                 </button>
             </form>
-            <p className="mt-8 text-center text-gray-600 font-medium">
+            <p className="mt-8 text-center text-gray-600 dark:text-slate-400 font-medium">
                 {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
                 <button
                     onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
