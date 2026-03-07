@@ -6,6 +6,7 @@ import Checkout from './pages/Checkout';
 import OrderStatus from './pages/OrderStatus';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
 import RiderPortal from './pages/RiderPortal';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/rider" element={<RiderPortal />} />
             <Route path="/restaurant/:id" element={<RestaurantMenu />} />
             <Route path="/checkout" element={<Checkout />} />

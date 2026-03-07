@@ -21,17 +21,22 @@ const Checkout = () => {
                 return;
             }
             setUserId(session.user.id);
+
+            // Load user-specific cart ONLY after we know who the user is
+            const items = JSON.parse(localStorage.getItem(`cart_${session.user.id}`)) || [];
+            const resId = localStorage.getItem(`restaurant_id_${session.user.id}`);
+
+            // Handle if items is an object (from the new RestaurantMenu logic) or an array (legacy)
+            const cartArray = Array.isArray(items) ? items : Object.values(items);
+
+            setCartItems(cartArray);
+            setRestaurantId(resId);
+
+            const sum = cartArray.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            setTotal(sum);
         };
 
         checkUser();
-
-        const items = JSON.parse(localStorage.getItem('cart')) || [];
-        const resId = localStorage.getItem('restaurant_id');
-        setCartItems(items);
-        setRestaurantId(resId);
-
-        const sum = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        setTotal(sum);
     }, [navigate]);
 
     const handlePlaceOrder = async () => {
@@ -51,8 +56,8 @@ const Checkout = () => {
             };
 
             const response = await api.post('/orders', payload);
-            localStorage.removeItem('cart');
-            localStorage.removeItem('restaurant_id');
+            localStorage.removeItem(`cart_${userId}`);
+            localStorage.removeItem(`restaurant_id_${userId}`);
             navigate(`/order/${response.data.order.id}`);
         } catch (err) {
             console.error("Failed to place order", err);
