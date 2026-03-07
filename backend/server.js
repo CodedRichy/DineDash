@@ -14,10 +14,14 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 const restaurantsRoute = require('./routes/restaurants')(supabase);
 const menuRoute = require('./routes/menu')(supabase);
 const ordersRoute = require('./routes/orders')(supabase);
+const usersRoute = require('./routes/users')(supabase);
+const analyticsRoute = require('./routes/analytics')(supabase);
 
 app.use('/api/restaurants', restaurantsRoute);
 app.use('/api/menu', menuRoute);
 app.use('/api/orders', ordersRoute);
+app.use('/api/users', usersRoute);
+app.use('/api/analytics', analyticsRoute);
 
 // Default Route
 app.get('/', (req, res) => {

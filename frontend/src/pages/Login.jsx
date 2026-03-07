@@ -23,7 +23,14 @@ const Login = () => {
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                navigate('/');
+
+                const { data: { user } } = await supabase.auth.getUser();
+                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+
+                if (profile?.role === 'manager') navigate('/manager');
+                else if (profile?.role === 'super_admin') navigate('/admin');
+                else if (profile?.role === 'delivery_partner') navigate('/rider');
+                else navigate('/');
             }
         } catch (err) {
             setMessage(err.message);
