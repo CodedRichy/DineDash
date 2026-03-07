@@ -124,8 +124,8 @@ const AdminDashboard = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">User ID</th>
-                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">Current Role</th>
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest text-left">User Email</th>
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">Role</th>
                                 <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">Assignment</th>
                                 <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
@@ -133,9 +133,12 @@ const AdminDashboard = () => {
                         <tbody className="divide-y divide-gray-50">
                             {users.map(u => (
                                 <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-8 py-6 font-mono text-xs text-gray-500">
-                                        {u.id}
-                                        {u.id === profile?.id && <span className="ml-2 bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-tighter">You</span>}
+                                    <td className="px-8 py-6">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-gray-900">{u.email || 'No Email Found'}</span>
+                                            <span className="font-mono text-[10px] text-gray-400 uppercase tracking-tighter">{u.id.slice(0, 8)}...</span>
+                                            {u.id === profile?.id && <span className="w-fit mt-1 bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-tighter">You (Super Admin)</span>}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center">
@@ -155,7 +158,7 @@ const AdminDashboard = () => {
                                                 </select>
                                             ) : (
                                                 <span className={`font-black px-3 py-1 rounded-lg text-xs uppercase ${u.role === 'manager' ? 'bg-orange-100 text-orange-600' :
-                                                        u.role === 'delivery_partner' ? 'bg-cyan-100 text-cyan-600' : 'bg-gray-100 text-gray-600'
+                                                    u.role === 'delivery_partner' ? 'bg-cyan-100 text-cyan-600' : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {u.role.replace('_', ' ')}
                                                 </span>
