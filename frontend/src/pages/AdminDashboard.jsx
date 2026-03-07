@@ -36,8 +36,8 @@ const AdminDashboard = () => {
                 .eq('id', session.user.id)
                 .single();
 
-            if (!profileData || (profileData.role !== 'manager' && profileData.role !== 'super_admin')) {
-                // Not an admin or manager, kick them back to home
+            if (!profileData || profileData.role !== 'super_admin') {
+                // Not a super admin, kick them back to home
                 navigate('/');
                 return;
             }
@@ -53,11 +53,6 @@ const AdminDashboard = () => {
         try {
             const resData = await api.get('/restaurants');
             let list = resData.data;
-
-            // If manager, only show their assigned restaurant
-            if (userProfile?.role === 'manager' && userProfile?.managed_restaurant_id) {
-                list = list.filter(r => r.id === userProfile.managed_restaurant_id);
-            }
 
             setRestaurants(list);
             if (list.length > 0) {

@@ -36,7 +36,8 @@ const Navbar = () => {
         navigate('/login');
     };
 
-    const isAdminOrManager = profile?.role === 'manager' || profile?.role === 'super_admin';
+    const isAdmin = profile?.role === 'super_admin';
+    const isManager = profile?.role === 'manager';
     const isDelivery = profile?.role === 'delivery_partner';
 
     return (
@@ -54,8 +55,11 @@ const Navbar = () => {
 
                     {user ? (
                         <>
-                            {isAdminOrManager && (
-                                <Link to="/admin" className="text-gray-700 hover:text-red-600 transition font-medium">Dashboard</Link>
+                            {isAdmin && (
+                                <Link to="/admin" className="text-gray-700 hover:text-red-600 transition font-medium">Platform Admin</Link>
+                            )}
+                            {isManager && (
+                                <Link to="/manager" className="text-gray-700 hover:text-red-600 transition font-medium">My Restaurant</Link>
                             )}
                             {isDelivery && (
                                 <Link to="/rider" className="text-gray-700 hover:text-red-600 transition font-medium">Rider Portal</Link>
