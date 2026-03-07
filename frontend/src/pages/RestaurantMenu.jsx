@@ -4,15 +4,29 @@ import api from '../api/axios';
 import { Plus, Minus, ArrowLeft, Star, ShoppingBag, MapPin, Utensils } from 'lucide-react';
 
 const RestaurantMenu = () => {
-    const { id } = useParams();
+    const id = useParams().id;
     const navigate = useNavigate();
     const [restaurant, setRestaurant] = useState(null);
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cart, setCart] = useState({});
+    const [profile, setProfile] = useState(null);
 
     useEffect(() => {
         const fetchDetails = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                setProfile(data);
+
+                // Load user-specific cart
+                const savedCart = JSON.parse(localStorage.getItem(`cart_${session.user.id}`)) || {};
+                const savedResId = localStorage.getItem(`restaurant_id_${session.user.id}`);
+                if (savedResId === id) {
+                    setCart(savedCart);
+                }
+            }
+
             try {
                 const [resResponse, menuResponse] = await Promise.all([
                     api.get(`/restaurants/${id}`),
@@ -54,14 +68,19 @@ const RestaurantMenu = () => {
 
     const cartItemCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
 
-    const proceedToCheckout = () => {
+    const proceedToCheckout = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return navigate('/login');
+
         const cartItems = Object.values(cart);
         if (cartItems.length > 0) {
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-            localStorage.setItem('restaurant_id', id);
+            localStorage.setItem(`cart_${session.user.id}`, JSON.stringify(cart));
+            localStorage.setItem(`restaurant_id_${session.user.id}`, id);
             navigate('/checkout');
         }
     };
+
+    const isConsumer = !profile || profile.role === 'consumer';
 
     if (loading) return (
         <div className="flex justify-center items-center h-64">
@@ -128,32 +147,34 @@ const RestaurantMenu = () => {
                                     </div>
                                     <div className="flex items-center justify-between mt-auto">
                                         <span className="text-lg font-bold text-green-700">${Number(item.price).toFixed(2)}</span>
-                                        <div className="flex items-center space-x-3 bg-gray-50 rounded-full border p-1 shadow-sm">
-                                            {cart[item.id] ? (
-                                                <>
-                                                    <button
-                                                        onClick={() => removeFromCart(item.id)}
-                                                        className="p-1.5 hover:bg-white rounded-full transition hover:text-red-500 text-gray-600 shadow-sm"
-                                                    >
-                                                        <Minus size={16} />
-                                                    </button>
-                                                    <span className="w-6 text-center font-bold text-gray-900">{cart[item.id].quantity}</span>
+                                        {isConsumer && (
+                                            <div className="flex items-center space-x-3 bg-gray-50 rounded-full border p-1 shadow-sm">
+                                                {cart[item.id] ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="p-1.5 hover:bg-white rounded-full transition hover:text-red-500 text-gray-600 shadow-sm"
+                                                        >
+                                                            <Minus size={16} />
+                                                        </button>
+                                                        <span className="w-6 text-center font-bold text-gray-900">{cart[item.id].quantity}</span>
+                                                        <button
+                                                            onClick={() => addToCart(item)}
+                                                            className="p-1.5 hover:bg-white rounded-full transition hover:text-green-500 text-gray-600 shadow-sm"
+                                                        >
+                                                            <Plus size={16} />
+                                                        </button>
+                                                    </>
+                                                ) : (
                                                     <button
                                                         onClick={() => addToCart(item)}
-                                                        className="p-1.5 hover:bg-white rounded-full transition hover:text-green-500 text-gray-600 shadow-sm"
+                                                        className="px-4 py-1.5 bg-white text-red-600 hover:text-white hover:bg-red-600 rounded-full font-bold transition-colors shadow-sm text-sm flex items-center gap-1"
                                                     >
-                                                        <Plus size={16} />
+                                                        <Plus size={16} /> Add
                                                     </button>
-                                                </>
-                                            ) : (
-                                                <button
-                                                    onClick={() => addToCart(item)}
-                                                    className="px-4 py-1.5 bg-white text-red-600 hover:text-white hover:bg-red-600 rounded-full font-bold transition-colors shadow-sm text-sm flex items-center gap-1"
-                                                >
-                                                    <Plus size={16} /> Add
-                                                </button>
-                                            )}
-                                        </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 {item.image_url && (
@@ -165,7 +186,7 @@ const RestaurantMenu = () => {
                 )}
             </div>
 
-            {cartItemCount > 0 && (
+            {cartItemCount > 0 && isConsumer && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-4 md:p-6 border-t z-50 animate-slide-up">
                     <div className="container mx-auto max-w-5xl flex justify-between items-center">
                         <div>

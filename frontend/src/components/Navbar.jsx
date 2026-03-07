@@ -48,10 +48,12 @@ const Navbar = () => {
                     <span className="text-2xl font-bold tracking-tight">DineDash</span>
                 </Link>
                 <div className="flex items-center space-x-6">
-                    <Link to="/checkout" className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition font-medium">
-                        <ShoppingBag size={24} />
-                        <span className="hidden sm:inline-block">Cart</span>
-                    </Link>
+                    {!isAdmin && !isManager && !isDelivery && (
+                        <Link to="/checkout" className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition font-medium">
+                            <ShoppingBag size={24} />
+                            <span className="hidden sm:inline-block">Cart</span>
+                        </Link>
+                    )}
 
                     {user ? (
                         <>
