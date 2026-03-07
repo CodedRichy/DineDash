@@ -42,17 +42,39 @@ const Navbar = () => {
     const isManager = profile?.role === 'manager';
     const isDelivery = profile?.role === 'delivery_partner';
 
-    const toggleTheme = () => {
-        const html = document.documentElement;
-        if (html.classList.contains('dark')) {
-            html.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            setIsDarkMode(false);
-        } else {
-            html.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-            setIsDarkMode(true);
+    const toggleTheme = (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        const applyTheme = () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                setIsDarkMode(false);
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                setIsDarkMode(true);
+            }
+        };
+
+        if (!document.startViewTransition) {
+            applyTheme();
+            return;
         }
+
+        document.documentElement.style.setProperty('--x', `${x}px`);
+        document.documentElement.style.setProperty('--y', `${y}px`);
+        document.documentElement.style.setProperty('--r', `${endRadius}px`);
+
+        document.startViewTransition(() => {
+            applyTheme();
+        });
     };
 
     return (
