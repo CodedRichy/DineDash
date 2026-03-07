@@ -7,10 +7,10 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const testUsers = [
-    { email: 'consumer@test.com', role: 'consumer' },
-    { email: 'manager@test.com', role: 'manager', restaurant_id: 'd2222222-2222-2222-2222-222222222222' },
-    { email: 'rider@test.com', role: 'delivery_partner' },
-    { email: 'admin@test.com', role: 'super_admin' }
+    { email: 'consumer@dinedash.app', role: 'consumer' },
+    { email: 'manager@dinedash.app', role: 'manager', restaurant_id: 'd2222222-2222-2222-2222-222222222222' },
+    { email: 'rider@dinedash.app', role: 'delivery_partner' },
+    { email: 'admin@dinedash.app', role: 'super_admin' }
 ];
 
 async function seed() {
