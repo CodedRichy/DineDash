@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
 import { supabase } from '../api/supabase';
-import { Package, Utensils, Edit, Trash2, Plus, Clock, Save, X } from 'lucide-react';
+import { Package, Utensils, Users, Edit, Trash2, Shield, Store, Check, X, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState('users'); // 'users', 'orders', or 'menu'
+    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState(null);
+
+    // User Management State
+    const [users, setUsers] = useState([]);
     const [restaurants, setRestaurants] = useState([]);
+    const [editingUser, setEditingUser] = useState(null);
+
+    // Legacy State (Orders/Menu)
     const [selectedRes, setSelectedRes] = useState(null);
     const [orders, setOrders] = useState([]);
     const [menu, setMenu] = useState([]);
-    const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'menu'
-
-    // Auth & loading
-    const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState(null);
-    const [profile, setProfile] = useState(null);
-
-    // Menu form state
-    const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', category: '', is_available: true });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -29,7 +28,6 @@ const AdminDashboard = () => {
                 return;
             }
 
-            // Check Profile Role
             const { data: profileData } = await supabase
                 .from('profiles')
                 .select('*')
@@ -37,28 +35,28 @@ const AdminDashboard = () => {
                 .single();
 
             if (!profileData || profileData.role !== 'super_admin') {
-                // Not a super admin, kick them back to home
                 navigate('/');
                 return;
             }
 
             setProfile(profileData);
-            setUser(session.user);
-            fetchInitialData(profileData);
+            fetchData();
         };
         checkAuth();
     }, [navigate]);
 
-    const fetchInitialData = async (userProfile) => {
+    const fetchData = async () => {
         try {
-            const resData = await api.get('/restaurants');
-            let list = resData.data;
+            const [usersRes, resData] = await Promise.all([
+                api.get('/users'),
+                api.get('/restaurants')
+            ]);
+            setUsers(usersRes.data);
+            setRestaurants(resData.data);
 
-            setRestaurants(list);
-            if (list.length > 0) {
-                const firstRes = list[0];
-                setSelectedRes(firstRes.id);
-                fetchResDetails(firstRes.id);
+            if (resData.data.length > 0) {
+                setSelectedRes(resData.data[0].id);
+                fetchResDetails(resData.data[0].id);
             }
         } catch (err) {
             console.error(err);
@@ -80,197 +78,210 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleResChange = (e) => {
-        const newId = e.target.value;
-        setSelectedRes(newId);
-        fetchResDetails(newId);
-    };
-
-    const handleSaveMenu = async (e) => {
-        e.preventDefault();
+    const handleUpdateUser = async (userId, updates) => {
         try {
-            if (isEditing && editForm.id) {
-                await api.put(`/menu/${editForm.id}`, editForm);
-            } else {
-                await api.post(`/menu`, { ...editForm, restaurant_id: selectedRes });
-            }
-            fetchResDetails(selectedRes);
-            setEditForm({ name: '', description: '', price: '', category: '', is_available: true });
-            setIsEditing(false);
+            await api.put(`/users/${userId}`, updates);
+            // Refresh local state
+            setUsers(users.map(u => u.id === userId ? { ...u, ...updates } : u));
+            setEditingUser(null);
         } catch (err) {
-            console.error("Error saving menu item", err);
-            alert("Error saving item to database");
+            alert(err.response?.data?.error || "Failed to update user");
         }
     };
 
-    const handleDeleteMenu = async (id) => {
-        if (!confirm("Are you sure?")) return;
-        try {
-            await api.delete(`/menu/${id}`);
-            fetchResDetails(selectedRes);
-        } catch (err) {
-            console.error("Error deleting", err);
-        }
-    };
-
-    const openEditForm = (item) => {
-        setEditForm(item);
-        setIsEditing(true);
-    };
-
-    const cancelEdit = () => {
-        setEditForm({ name: '', description: '', price: '', category: '', is_available: true });
-        setIsEditing(false);
-    };
-
-    if (loading) return <div className="p-12 text-center text-lg font-bold">Loading Admin...</div>;
+    if (loading) return <div className="p-12 text-center text-lg font-bold">Loading Platform Admin...</div>;
 
     return (
-        <div className="max-w-6xl mx-auto py-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
-                <div className="flex items-center space-x-4 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
-                    <span className="text-sm font-bold text-gray-500 uppercase px-2">Managing ID:</span>
-                    <select
-                        value={selectedRes}
-                        onChange={handleResChange}
-                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 font-medium focus:ring-red-500 outline-none"
-                    >
-                        {restaurants.map(r => (
-                            <option key={r.id} value={r.id}>{r.name}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+        <div className="max-w-7xl mx-auto py-8 px-4">
+            <header className="mb-10">
+                <h1 className="text-4xl font-black text-gray-900 mb-2">Platform Control</h1>
+                <p className="text-gray-500 font-medium">Global oversight and user permissions management.</p>
+            </header>
 
-            <div className="flex space-x-4 mb-8">
+            <div className="flex space-x-2 mb-8 bg-gray-100 p-1.5 rounded-2xl w-fit">
+                <button
+                    onClick={() => setActiveTab('users')}
+                    className={`flex items-center px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'users' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    <Users className="w-5 h-5 mr-2" /> Users
+                </button>
                 <button
                     onClick={() => setActiveTab('orders')}
-                    className={`flex items-center px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'orders' ? 'bg-red-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+                    className={`flex items-center px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'orders' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    <Package className="w-5 h-5 mr-2" /> Incoming Orders
+                    <Package className="w-5 h-5 mr-2" /> Orders
                 </button>
                 <button
                     onClick={() => setActiveTab('menu')}
-                    className={`flex items-center px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'menu' ? 'bg-red-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+                    className={`flex items-center px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'menu' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    <Utensils className="w-5 h-5 mr-2" /> Menu Management
+                    <Utensils className="w-5 h-5 mr-2" /> Menus
                 </button>
             </div>
 
-            {activeTab === 'orders' && (
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                    <h2 className="text-2xl font-bold mb-6 text-gray-800">Recent Orders</h2>
-                    {orders.length === 0 ? (
-                        <p className="text-gray-500 font-medium">No orders found.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {orders.map(order => (
-                                <div key={order.id} className="border border-gray-100 rounded-2xl p-6 bg-gray-50 hover:bg-white transition-colors">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <p className="font-bold text-gray-900 text-lg">Order #{order.id.slice(0, 8)}</p>
-                                            <p className="text-gray-500 text-sm flex items-center mt-1">
-                                                <Clock className="w-4 h-4 mr-1" />
-                                                {new Date(order.created_at).toLocaleString()}
-                                            </p>
+            {activeTab === 'users' && (
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">User ID</th>
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">Current Role</th>
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest">Assignment</th>
+                                <th className="px-8 py-5 text-sm font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {users.map(u => (
+                                <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-8 py-6 font-mono text-xs text-gray-500">
+                                        {u.id}
+                                        {u.id === profile?.id && <span className="ml-2 bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-tighter">You</span>}
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center">
+                                            {u.role === 'super_admin' ? (
+                                                <span className="flex items-center bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-lg text-xs uppercase">
+                                                    <Shield className="w-3 h-3 mr-1.5" /> Super Admin
+                                                </span>
+                                            ) : editingUser === u.id ? (
+                                                <select
+                                                    value={u.role}
+                                                    onChange={(e) => setUsers(users.map(item => item.id === u.id ? { ...item, role: e.target.value } : item))}
+                                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                                >
+                                                    <option value="consumer">Consumer</option>
+                                                    <option value="manager">Manager</option>
+                                                    <option value="delivery_partner">Rider</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`font-black px-3 py-1 rounded-lg text-xs uppercase ${u.role === 'manager' ? 'bg-orange-100 text-orange-600' :
+                                                        u.role === 'delivery_partner' ? 'bg-cyan-100 text-cyan-600' : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {u.role.replace('_', ' ')}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="text-right">
-                                            <span className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-full text-sm uppercase">
-                                                {order.status}
-                                            </span>
-                                            <p className="font-black text-xl text-green-700 mt-2">${order.total_price}</p>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        {u.role === 'manager' ? (
+                                            editingUser === u.id ? (
+                                                <select
+                                                    value={u.managed_restaurant_id || ''}
+                                                    onChange={(e) => setUsers(users.map(item => item.id === u.id ? { ...item, managed_restaurant_id: e.target.value || null } : item))}
+                                                    className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                                >
+                                                    <option value="">No Store assigned</option>
+                                                    {restaurants.map(r => (
+                                                        <option key={r.id} value={r.id}>{r.name}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <span className="flex items-center text-sm font-bold text-gray-700">
+                                                    <Store className="w-4 h-4 mr-2 text-gray-400" />
+                                                    {restaurants.find(r => r.id === u.managed_restaurant_id)?.name || "Unassigned"}
+                                                </span>
+                                            )
+                                        ) : (
+                                            <span className="text-gray-300 italic text-sm">N/A</span>
+                                        )}
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                        {u.role === 'super_admin' ? (
+                                            u.id === profile?.id ? (
+                                                <div className="flex items-center justify-end text-orange-400 text-xs font-bold italic">
+                                                    <AlertCircle className="w-3 h-3 mr-1" /> SQL Protected
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-300 text-xs font-bold uppercase">Immutable</span>
+                                            )
+                                        ) : editingUser === u.id ? (
+                                            <div className="flex space-x-2 justify-end">
+                                                <button
+                                                    onClick={() => handleUpdateUser(u.id, { role: u.role, managed_restaurant_id: u.managed_restaurant_id })}
+                                                    className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setEditingUser(null); fetchData(); }}
+                                                    className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-lg transition-colors"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setEditingUser(u.id)}
+                                                className="text-blue-600 hover:text-blue-700 font-black text-xs uppercase tracking-tighter"
+                                            >
+                                                Edit Permissions
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {(activeTab === 'orders' || activeTab === 'menu') && (
+                <div className="space-y-8">
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Store className="w-5 h-5 mr-3 text-red-500" />
+                            <span className="font-black text-gray-900 uppercase tracking-tighter mr-4">Previewing Restaurant:</span>
+                            <select
+                                value={selectedRes}
+                                onChange={(e) => { setSelectedRes(e.target.value); fetchResDetails(e.target.value); }}
+                                className="bg-gray-100 border-0 rounded-xl px-4 py-2 font-bold focus:ring-2 focus:ring-red-500 outline-none"
+                            >
+                                {restaurants.map(r => (
+                                    <option key={r.id} value={r.id}>{r.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="text-xs font-black text-gray-400 bg-gray-50 px-4 py-2 rounded-full uppercase">
+                            Global Catalog Mode
+                        </div>
+                    </div>
+
+                    {activeTab === 'orders' && (
+                        <div className="grid gap-4">
+                            {orders.map(order => (
+                                <div key={order.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex justify-between items-center group hover:border-red-100 transition-colors">
+                                    <div className="flex items-center space-x-6">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center font-black text-gray-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
+                                            #{order.id.slice(0, 4)}
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-gray-900">${order.total_price}</p>
+                                            <p className="text-xs font-bold text-gray-400 uppercase">{order.status}</p>
                                         </div>
                                     </div>
-                                    <div className="border-t border-gray-200 pt-4">
-                                        <p className="font-semibold text-gray-700 mb-2">Items:</p>
-                                        <ul className="text-sm text-gray-600 space-y-1">
-                                            {order.order_items?.map(i => (
-                                                <li key={i.id} className="flex justify-between">
-                                                    <span>{i.quantity}x {i.menu_items?.name}</span>
-                                                    <span>${(i.price_at_time_of_order * i.quantity).toFixed(2)}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                    <div className="text-xs font-mono text-gray-300">Ordered {new Date(order.created_at).toLocaleTimeString()}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'menu' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {menu.map(item => (
+                                <div key={item.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <p className="font-black text-gray-900">{item.name}</p>
+                                        <p className="font-black text-green-600">${item.price}</p>
+                                    </div>
+                                    <p className="text-sm text-gray-400 font-medium mb-4 line-clamp-2">{item.description}</p>
+                                    <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                                        <span className="text-[10px] font-black uppercase bg-gray-50 px-2 py-0.5 rounded text-gray-400">{item.category}</span>
+                                        <button className="text-red-500 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                </div>
-            )}
-
-            {activeTab === 'menu' && (
-                <div className="grid md:grid-cols-3 gap-8">
-                    <div className="md:col-span-1">
-                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
-                            <h2 className="text-xl font-bold mb-6 text-gray-800">
-                                {isEditing ? 'Edit Item' : 'Add New Item'}
-                            </h2>
-                            <form onSubmit={handleSaveMenu} className="space-y-4 flex flex-col">
-                                <input
-                                    className="border border-gray-200 rounded-xl px-4 py-2 font-medium focus:ring-2 focus:ring-red-500 outline-none"
-                                    placeholder="Item Name" required
-                                    value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                                />
-                                <input
-                                    className="border border-gray-200 rounded-xl px-4 py-2 font-medium focus:ring-2 focus:ring-red-500 outline-none"
-                                    placeholder="Price e.g. 12.99" type="number" step="0.01" required
-                                    value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })}
-                                />
-                                <input
-                                    className="border border-gray-200 rounded-xl px-4 py-2 font-medium focus:ring-2 focus:ring-red-500 outline-none"
-                                    placeholder="Category"
-                                    value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                                />
-                                <textarea
-                                    className="border border-gray-200 rounded-xl px-4 py-2 font-medium focus:ring-2 focus:ring-red-500 outline-none"
-                                    placeholder="Description" rows="3"
-                                    value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                                />
-                                <label className="flex items-center space-x-2 font-medium text-gray-700">
-                                    <input type="checkbox" checked={editForm.is_available} onChange={e => setEditForm({ ...editForm, is_available: e.target.checked })} className="w-5 h-5 rounded" />
-                                    <span>Available on Menu</span>
-                                </label>
-
-                                <div className="flex space-x-2 mt-4">
-                                    <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl flex items-center justify-center transition-colors">
-                                        <Save className="w-4 h-4 mr-2" /> Save
-                                    </button>
-                                    {isEditing && (
-                                        <button type="button" onClick={cancelEdit} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors">
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {menu.map(item => (
-                                <div key={item.id} className={`bg-white rounded-2xl p-5 border shadow-sm flex flex-col ${!item.is_available ? 'opacity-60 grayscale' : 'border-gray-100'}`}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-                                        <span className="font-black text-green-700">${item.price}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-500 mb-4 flex-grow">{item.description}</p>
-                                    <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                                        <span className="text-xs font-bold uppercase text-gray-400 bg-gray-50 px-2 py-1 rounded-md">{item.category || 'General'}</span>
-                                        <div className="flex space-x-2">
-                                            <button onClick={() => openEditForm(item)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => handleDeleteMenu(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             )}
         </div>
