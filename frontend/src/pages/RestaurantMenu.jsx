@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { supabase } from '../api/supabase';
 import { Plus, Minus, ArrowLeft, Star, ShoppingBag, MapPin, Utensils } from 'lucide-react';
 
 const RestaurantMenu = () => {
@@ -11,20 +12,24 @@ const RestaurantMenu = () => {
     const [loading, setLoading] = useState(true);
     const [cart, setCart] = useState({});
     const [profile, setProfile] = useState(null);
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
         const fetchDetails = async () => {
             const { data: { session } } = await supabase.auth.getSession();
+            const currentUserId = session?.user?.id || 'guest';
+            setUserId(currentUserId);
+
             if (session?.user) {
                 const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
                 setProfile(data);
+            }
 
-                // Load user-specific cart
-                const savedCart = JSON.parse(localStorage.getItem(`cart_${session.user.id}`)) || {};
-                const savedResId = localStorage.getItem(`restaurant_id_${session.user.id}`);
-                if (savedResId === id) {
-                    setCart(savedCart);
-                }
+            // Load cart (User-specific or Guest)
+            const savedCart = JSON.parse(localStorage.getItem(`cart_${currentUserId}`)) || {};
+            const savedResId = localStorage.getItem(`restaurant_id_${currentUserId}`);
+            if (savedResId === id) {
+                setCart(savedCart);
             }
 
             try {
@@ -45,7 +50,8 @@ const RestaurantMenu = () => {
     }, [id]);
 
     const addToCart = (item) => {
-        const savedResId = localStorage.getItem(`restaurant_id_${profile?.id}`);
+        const currentId = userId || 'guest';
+        const savedResId = localStorage.getItem(`restaurant_id_${currentId}`);
 
         // Conflict Check: If items exist from another restaurant
         if (savedResId && savedResId !== id && Object.keys(cart).length > 0) {
@@ -53,8 +59,10 @@ const RestaurantMenu = () => {
             if (!confirmClear) return;
 
             // Clear old cart
-            setCart({ [item.id]: { ...item, quantity: 1 } });
-            localStorage.setItem(`restaurant_id_${profile?.id}`, id);
+            const newCart = { [item.id]: { ...item, quantity: 1 } };
+            setCart(newCart);
+            localStorage.setItem(`cart_${currentId}`, JSON.stringify(newCart));
+            localStorage.setItem(`restaurant_id_${currentId}`, id);
             return;
         }
 
@@ -66,15 +74,14 @@ const RestaurantMenu = () => {
                     quantity: (prev[item.id]?.quantity || 0) + 1
                 }
             };
-            if (profile?.id) {
-                localStorage.setItem(`cart_${profile.id}`, JSON.stringify(newCart));
-                localStorage.setItem(`restaurant_id_${profile.id}`, id);
-            }
+            localStorage.setItem(`cart_${currentId}`, JSON.stringify(newCart));
+            localStorage.setItem(`restaurant_id_${currentId}`, id);
             return newCart;
         });
     };
 
     const removeFromCart = (itemId) => {
+        const currentId = userId || 'guest';
         setCart(prev => {
             const newCart = { ...prev };
             if (newCart[itemId].quantity > 1) {
@@ -82,6 +89,7 @@ const RestaurantMenu = () => {
             } else {
                 delete newCart[itemId];
             }
+            localStorage.setItem(`cart_${currentId}`, JSON.stringify(newCart));
             return newCart;
         });
     };
@@ -90,7 +98,7 @@ const RestaurantMenu = () => {
 
     const proceedToCheckout = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return navigate('/login');
+        if (!session) return navigate('/login?redirect=checkout');
 
         const cartItems = Object.values(cart);
         if (cartItems.length > 0) {
