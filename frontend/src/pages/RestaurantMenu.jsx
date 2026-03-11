@@ -206,7 +206,12 @@ const RestaurantMenu = () => {
                                     </div>
                                 </div>
                                 {item.image_url && (
-                                    <img src={item.image_url} alt={item.name} className="w-28 h-28 object-cover rounded-xl shadow-sm shrink-0 border border-gray-50" />
+                                    <img
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        className="w-28 h-28 object-cover rounded-xl shadow-sm shrink-0 border border-gray-50"
+                                        onError={(e) => e.target.style.display = 'none'}
+                                    />
                                 )}
                             </div>
                         ))}
