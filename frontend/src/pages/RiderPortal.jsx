@@ -71,41 +71,41 @@ const RiderPortal = () => {
         <div className="max-w-4xl mx-auto py-8 px-4">
             {/* Header / Stats */}
             <div className="mb-10 text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Rider Portal</h1>
-                <p className="text-gray-600">Available delivery jobs and your performance stats.</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Rider Portal</h1>
+                <p className="text-gray-600 dark:text-slate-400">Available delivery jobs and your performance stats.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div className="bg-white p-6 rounded-xl shadow border border-gray-100 transition-all duration-200">
-                    <div className="bg-blue-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-blue-600">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-gray-100 dark:border-white/5 transition-all duration-200">
+                    <div className="bg-blue-50 dark:bg-blue-500/15 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-blue-600 dark:text-blue-400">
                         <Truck size={24} />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">12</div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Deliveries Today</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">12</div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Deliveries Today</div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow border border-gray-100 transition-all duration-200">
-                    <div className="bg-green-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-green-600">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-gray-100 dark:border-white/5 transition-all duration-200">
+                    <div className="bg-green-50 dark:bg-green-500/15 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
                         <CheckCircle size={24} />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">₹1,450</div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Earnings Today</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">₹1,450</div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Earnings Today</div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow border border-gray-100 transition-all duration-200">
-                    <div className="bg-orange-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-orange-600">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-gray-100 dark:border-white/5 transition-all duration-200">
+                    <div className="bg-orange-50 dark:bg-orange-500/15 w-12 h-12 rounded-lg flex items-center justify-center mb-4 text-orange-600 dark:text-orange-400">
                         <Clock size={24} />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">4.9/5</div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rating</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">4.9/5</div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Rating</div>
                 </div>
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <Package className="text-red-600" />
                 Available Jobs
             </h2>
 
             {orders.length === 0 ? (
-                <div className="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-12 text-center text-gray-500">
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-xl border border-dashed border-gray-300 dark:border-white/5 p-12 text-center text-gray-500 dark:text-slate-400">
                     No orders currently waiting for pickup.
                 </div>
             ) : (
