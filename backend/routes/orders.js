@@ -4,11 +4,12 @@ module.exports = (supabase, checkRole) => {
     const router = express.Router();
 
     // Create a new order
-    router.post('/', async (req, res) => {
+    router.post('/', checkRole(['consumer', 'manager', 'super_admin']), async (req, res) => {
         const { user_id, restaurant_id, items } = req.body;
 
-        if (!user_id) {
-            return res.status(401).json({ error: "Authentication required to place order." });
+        // Security Check: Ensure the user is not placing an order for someone else
+        if (req.user.id !== user_id) {
+            return res.status(403).json({ error: "Access denied: Cannot place order for another user." });
         }
 
         if (!items || items.length === 0) {
@@ -27,19 +28,23 @@ module.exports = (supabase, checkRole) => {
 
             // 2. Calculate SERVER-SIDE total
             let serverTotalPrice = 0;
-            const verifiedItems = items.map(clientItem => {
+            const verifiedItems = [];
+
+            for (const clientItem of items) {
                 const dbItem = dbItems.find(db => db.id === clientItem.item_id);
-                if (!dbItem) throw new Error(`Item ${clientItem.item_id} no longer exists.`);
+                if (!dbItem) {
+                    return res.status(400).json({ error: `Item ${clientItem.item_id} no longer exists.` });
+                }
 
                 const itemTotal = parseFloat(dbItem.price) * clientItem.quantity;
                 serverTotalPrice += itemTotal;
 
-                return {
+                verifiedItems.push({
                     item_id: clientItem.item_id,
                     quantity: clientItem.quantity,
-                    price: dbItem.price // Use the verified DB price
-                };
-            });
+                    price: dbItem.price
+                });
+            }
 
             // 3. Insert Order and Items atomically using RPC
             const { data: orderResponse, error: rpcError } = await supabase.rpc('place_order_atomic', {
@@ -61,8 +66,8 @@ module.exports = (supabase, checkRole) => {
         }
     });
 
-    // Get order status (Public/Owner check can be added later, basic catch for now)
-    router.get('/:id', async (req, res) => {
+    // Get order status (Restricted to owner, restaurant manager, or admin)
+    router.get('/:id', checkRole(['consumer', 'manager', 'super_admin', 'delivery_partner']), async (req, res) => {
         try {
             const { data, error } = await supabase
                 .from('orders')
@@ -77,6 +82,17 @@ module.exports = (supabase, checkRole) => {
                 .single();
 
             if (error) throw error;
+            if (!data) return res.status(404).json({ error: "Order not found" });
+
+            // Security Check
+            const isOwner = data.user_id === req.user.id;
+            const isSuperAdmin = req.userRole === 'super_admin';
+            const isManager = req.userRole === 'manager'; // Note: Specific restaurant manager check could be added
+
+            if (!isOwner && !isSuperAdmin && !isManager && req.userRole !== 'delivery_partner') {
+                return res.status(403).json({ error: "Access denied to order details." });
+            }
+
             res.json(data);
         } catch (err) {
             res.status(500).json({ error: "Could not fetch order: " + err.message });

@@ -59,7 +59,7 @@ module.exports = (supabase) => {
 
             // Log the action
             await supabase.from('admin_audit_logs').insert({
-                admin_id: req.headers['x-admin-id'] || null, // We'll pass this from frontend
+                admin_id: req.user.id, 
                 action_type: currentUser.role !== role ? 'ROLE_CHANGE' : 'STORE_ASSIGN',
                 target_user_id: userId,
                 details: { old_role: currentUser.role, new_role: role, restaurant_id: managed_restaurant_id }

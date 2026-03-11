@@ -219,16 +219,15 @@ const ManagerDashboard = () => {
                                         value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                                     />
                                 </div>
-                                <label className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-slate-900 rounded-2xl cursor-pointer">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-black text-gray-400 uppercase tracking-tighter">Image URL</label>
+                                    <label className="text-sm font-black text-gray-400 dark:text-slate-400 uppercase tracking-tighter">Image URL</label>
                                     <input
-                                        className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 font-bold focus:ring-2 focus:ring-red-500 outline-none"
+                                        className="w-full bg-gray-50 dark:bg-slate-900 border-0 dark:border dark:border-slate-700 rounded-2xl px-5 py-4 font-bold focus:ring-2 focus:ring-red-500 outline-none dark:text-white dark:placeholder-slate-400"
                                         placeholder="https://images.unsplash.com/..."
                                         value={editForm.image_url || ''} onChange={e => setEditForm({ ...editForm, image_url: e.target.value })}
                                     />
                                 </div>
-                                <label className="flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl cursor-pointer">
+                                <label className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-slate-900 rounded-2xl cursor-pointer">
                                     <input type="checkbox" checked={editForm.is_available} onChange={e => setEditForm({ ...editForm, is_available: e.target.checked })} className="w-6 h-6 rounded-lg accent-red-600" />
                                     <span className="font-bold text-gray-700 dark:text-white">Available to customers</span>
                                 </label>
@@ -251,33 +250,28 @@ const ManagerDashboard = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {menu.map(item => (
                                 <div key={item.id} className={`bg-white dark:bg-slate-800 rounded-3xl p-6 border shadow-sm flex flex-col hover:shadow-md transition-all ${!item.is_available ? 'opacity-50 grayscale' : 'border-gray-100 dark:border-white/5'}`}>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="font-black text-xl text-gray-900 dark:text-white leading-tight">{item.name}</h3>
-                                        <span className="font-black text-xl text-green-600 bg-green-50 dark:bg-green-500/15 dark:text-green-400 px-3 py-1 rounded-xl">${item.price}</span>
-                                    </div>
-                                    <p className="text-gray-500 dark:text-slate-400 font-medium text-sm mb-6 flex-grow">{item.description}</p>
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/5">
-                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-400 bg-gray-50 dark:bg-slate-500/15 px-3 py-1 rounded-lg">{item.category || 'General'}</span>
-                                <div key={item.id} className={`bg-white rounded-3xl p-6 border shadow-sm flex flex-col hover:shadow-md transition-all ${!item.is_available ? 'opacity-50 grayscale' : 'border-gray-100'}`}>
                                     <div className="flex gap-4 items-start mb-6 flex-grow">
                                         <div className="flex-grow">
                                             <div className="flex justify-between items-start mb-1">
-                                                <h3 className="font-black text-xl text-gray-900 leading-tight">{item.name}</h3>
-                                                <span className="font-black text-lg text-green-600">${item.price}</span>
+                                                <h3 className="font-black text-xl text-gray-900 dark:text-white leading-tight">{item.name}</h3>
+                                                <span className="font-black text-xl text-green-600 bg-green-50 dark:bg-green-500/15 dark:text-green-400 px-3 py-1 rounded-xl">${item.price}</span>
                                             </div>
-                                            <p className="text-gray-500 font-medium text-sm line-clamp-2">{item.description}</p>
+                                            <p className="text-gray-500 dark:text-slate-400 font-medium text-sm line-clamp-2">{item.description}</p>
                                         </div>
                                         {item.image_url && (
-                                            <img src={item.image_url} alt={item.name} className="w-20 h-20 rounded-2xl object-cover shadow-sm border border-gray-100 shrink-0" />
+                                            <img src={item.image_url} alt={item.name} className="w-20 h-20 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/5 shrink-0" />
                                         )}
                                     </div>
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1 rounded-lg">{item.category || 'General'}</span>
+                                    <div className="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-white/5">
+                                        <span className="text-[10px] font-black uppercase bg-gray-50 dark:bg-slate-900/50 px-2 py-0.5 rounded text-gray-400 dark:text-slate-400">{item.category}</span>
                                         <div className="flex space-x-1">
-                                            <button onClick={() => { setEditForm(item); setIsEditing(true); }} className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+                                            <button onClick={() => { setEditForm(item); setIsEditing(true); }} className="p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10 rounded-xl transition-colors">
                                                 <Edit className="w-5 h-5" />
                                             </button>
-                                            <button onClick={() => handleDeleteMenu(item.id)} className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                            <button
+                                                onClick={() => handleDeleteMenu(item.id)}
+                                                className="p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 rounded-xl transition-colors"
+                                            >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>

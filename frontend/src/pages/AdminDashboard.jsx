@@ -525,10 +525,6 @@ const AdminDashboard = () => {
                                     <p className="text-sm text-gray-400 dark:text-slate-300 font-medium mb-4 line-clamp-2">{item.description}</p>
                                     <div className="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-white/5">
                                         <span className="text-[10px] font-black uppercase bg-gray-50 dark:bg-slate-900/50 px-2 py-0.5 rounded text-gray-400 dark:text-slate-400">{item.category}</span>
-                                        <button className="text-red-500 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
-                                    <p className="text-sm text-gray-400 font-medium mb-4 line-clamp-2">{item.description}</p>
-                                    <div className="flex justify-between items-center pt-4 border-t border-gray-50">
-                                        <span className="text-[10px] font-black uppercase bg-gray-50 px-2 py-0.5 rounded text-gray-400">{item.category}</span>
                                         <button
                                             onClick={() => handleDeleteMenu(item.id)}
                                             className="text-red-500 hover:text-red-600"
