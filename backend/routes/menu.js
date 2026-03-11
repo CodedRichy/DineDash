@@ -23,7 +23,7 @@ module.exports = (supabase, checkRole) => {
     // Create new menu item (Manager/Admin Only)
     router.post('/', checkRole(['manager', 'super_admin']), async (req, res) => {
         try {
-            const { restaurant_id, name, description, price, category, is_available } = req.body;
+            const { restaurant_id, name, description, price, category, is_available, image_url } = req.body;
 
             // Safety: Managers can only add to their own restaurant
             if (req.userRole === 'manager') {
@@ -35,7 +35,7 @@ module.exports = (supabase, checkRole) => {
 
             const { data, error } = await supabase
                 .from('menu_items')
-                .insert([{ restaurant_id, name, description, price, category, is_available }])
+                .insert([{ restaurant_id, name, description, price, category, is_available, image_url }])
                 .select()
                 .single();
             if (error) throw error;
