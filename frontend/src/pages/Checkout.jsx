@@ -20,11 +20,22 @@ const Checkout = () => {
                 navigate('/login?redirect=checkout');
                 return;
             }
-            setUserId(session.user.id);
+            const currentUserId = session.user.id;
+            setUserId(currentUserId);
+
+            // GUEST MIGRATION: If there's a guest cart, move it to the user's ID
+            const guestCart = localStorage.getItem('cart_guest');
+            const guestResId = localStorage.getItem('restaurant_id_guest');
+            if (guestCart) {
+                localStorage.setItem(`cart_${currentUserId}`, guestCart);
+                localStorage.setItem(`restaurant_id_${currentUserId}`, guestResId);
+                localStorage.removeItem('cart_guest');
+                localStorage.removeItem('restaurant_id_guest');
+            }
 
             // Load user-specific cart ONLY after we know who the user is
-            const items = JSON.parse(localStorage.getItem(`cart_${session.user.id}`)) || [];
-            const resId = localStorage.getItem(`restaurant_id_${session.user.id}`);
+            const items = JSON.parse(localStorage.getItem(`cart_${currentUserId}`)) || [];
+            const resId = localStorage.getItem(`restaurant_id_${currentUserId}`);
 
             // Handle if items is an object (from the new RestaurantMenu logic) or an array (legacy)
             const cartArray = Array.isArray(items) ? items : Object.values(items);
@@ -47,11 +58,10 @@ const Checkout = () => {
             const payload = {
                 user_id: userId,
                 restaurant_id: restaurantId,
-                total_price: total,
+                // total_price is ignored by the new backend but kept for compatibility
                 items: cartItems.map(item => ({
                     item_id: item.id,
-                    quantity: item.quantity,
-                    price: item.price
+                    quantity: item.quantity
                 }))
             };
 
@@ -61,9 +71,8 @@ const Checkout = () => {
             navigate(`/order/${response.data.order.id}`);
         } catch (err) {
             console.error("Failed to place order", err);
-            alert("Error placing order. Please try again.");
-        } finally {
-            setLoading(false);
+            alert("Something went wrong. Please try again.");
+            setLoading(false); // Reset loading so they can retry
         }
     };
 

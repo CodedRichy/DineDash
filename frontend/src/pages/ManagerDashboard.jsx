@@ -15,7 +15,7 @@ const ManagerDashboard = () => {
 
     // Menu form state
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', category: '', is_available: true });
+    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -78,7 +78,7 @@ const ManagerDashboard = () => {
             // Refresh menu
             const menuRes = await api.get(`/menu/${restaurant.id}`);
             setMenu(menuRes.data || []);
-            setEditForm({ name: '', description: '', price: '', category: '', is_available: true });
+            setEditForm({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' });
             setIsEditing(false);
         } catch (err) {
             console.error("Error saving menu item", err);
@@ -152,7 +152,7 @@ const ManagerDashboard = () => {
                                     </div>
                                     <div className="text-right">
                                         <span className={`font-black px-4 py-2 rounded-xl text-sm uppercase ${order.status === 'pending' ? 'bg-orange-100 text-orange-600' :
-                                                order.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                                            order.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
                                             }`}>
                                             {order.status}
                                         </span>
@@ -220,6 +220,15 @@ const ManagerDashboard = () => {
                                     />
                                 </div>
                                 <label className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-slate-900 rounded-2xl cursor-pointer">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-black text-gray-400 uppercase tracking-tighter">Image URL</label>
+                                    <input
+                                        className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 font-bold focus:ring-2 focus:ring-red-500 outline-none"
+                                        placeholder="https://images.unsplash.com/..."
+                                        value={editForm.image_url || ''} onChange={e => setEditForm({ ...editForm, image_url: e.target.value })}
+                                    />
+                                </div>
+                                <label className="flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl cursor-pointer">
                                     <input type="checkbox" checked={editForm.is_available} onChange={e => setEditForm({ ...editForm, is_available: e.target.checked })} className="w-6 h-6 rounded-lg accent-red-600" />
                                     <span className="font-bold text-gray-700 dark:text-white">Available to customers</span>
                                 </label>
@@ -229,7 +238,7 @@ const ManagerDashboard = () => {
                                         <Save className="w-5 h-5 mr-2" /> Save Dish
                                     </button>
                                     {isEditing && (
-                                        <button type="button" onClick={() => { setIsEditing(false); setEditForm({ name: '', description: '', price: '', category: '', is_available: true }); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-5 rounded-2xl transition-colors">
+                                        <button type="button" onClick={() => { setIsEditing(false); setEditForm({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' }); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-5 rounded-2xl transition-colors">
                                             <X className="w-6 h-6" />
                                         </button>
                                     )}
@@ -249,6 +258,21 @@ const ManagerDashboard = () => {
                                     <p className="text-gray-500 dark:text-slate-400 font-medium text-sm mb-6 flex-grow">{item.description}</p>
                                     <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/5">
                                         <span className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-400 bg-gray-50 dark:bg-slate-500/15 px-3 py-1 rounded-lg">{item.category || 'General'}</span>
+                                <div key={item.id} className={`bg-white rounded-3xl p-6 border shadow-sm flex flex-col hover:shadow-md transition-all ${!item.is_available ? 'opacity-50 grayscale' : 'border-gray-100'}`}>
+                                    <div className="flex gap-4 items-start mb-6 flex-grow">
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h3 className="font-black text-xl text-gray-900 leading-tight">{item.name}</h3>
+                                                <span className="font-black text-lg text-green-600">${item.price}</span>
+                                            </div>
+                                            <p className="text-gray-500 font-medium text-sm line-clamp-2">{item.description}</p>
+                                        </div>
+                                        {item.image_url && (
+                                            <img src={item.image_url} alt={item.name} className="w-20 h-20 rounded-2xl object-cover shadow-sm border border-gray-100 shrink-0" />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1 rounded-lg">{item.category || 'General'}</span>
                                         <div className="flex space-x-1">
                                             <button onClick={() => { setEditForm(item); setIsEditing(true); }} className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
                                                 <Edit className="w-5 h-5" />
