@@ -30,4 +30,4 @@ BEGIN
 
   RETURN json_build_object('id', v_order_id);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
