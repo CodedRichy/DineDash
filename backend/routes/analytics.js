@@ -63,7 +63,7 @@ module.exports = (supabase) => {
                 restaurants: resCount
             });
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            res.status(500).json({ error: "Failed to generate platform analytics: " + err.message });
         }
     });
 

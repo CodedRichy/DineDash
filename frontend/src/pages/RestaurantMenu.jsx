@@ -45,13 +45,33 @@ const RestaurantMenu = () => {
     }, [id]);
 
     const addToCart = (item) => {
-        setCart(prev => ({
-            ...prev,
-            [item.id]: {
-                ...item,
-                quantity: (prev[item.id]?.quantity || 0) + 1
+        const savedResId = localStorage.getItem(`restaurant_id_${profile?.id}`);
+
+        // Conflict Check: If items exist from another restaurant
+        if (savedResId && savedResId !== id && Object.keys(cart).length > 0) {
+            const confirmClear = window.confirm("Your cart contains items from another restaurant. Clear cart and start fresh?");
+            if (!confirmClear) return;
+
+            // Clear old cart
+            setCart({ [item.id]: { ...item, quantity: 1 } });
+            localStorage.setItem(`restaurant_id_${profile?.id}`, id);
+            return;
+        }
+
+        setCart(prev => {
+            const newCart = {
+                ...prev,
+                [item.id]: {
+                    ...item,
+                    quantity: (prev[item.id]?.quantity || 0) + 1
+                }
+            };
+            if (profile?.id) {
+                localStorage.setItem(`cart_${profile.id}`, JSON.stringify(newCart));
+                localStorage.setItem(`restaurant_id_${profile.id}`, id);
             }
-        }));
+            return newCart;
+        });
     };
 
     const removeFromCart = (itemId) => {

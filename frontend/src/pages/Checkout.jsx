@@ -47,11 +47,10 @@ const Checkout = () => {
             const payload = {
                 user_id: userId,
                 restaurant_id: restaurantId,
-                total_price: total,
+                // total_price is ignored by the new backend but kept for compatibility
                 items: cartItems.map(item => ({
                     item_id: item.id,
-                    quantity: item.quantity,
-                    price: item.price
+                    quantity: item.quantity
                 }))
             };
 
@@ -61,9 +60,8 @@ const Checkout = () => {
             navigate(`/order/${response.data.order.id}`);
         } catch (err) {
             console.error("Failed to place order", err);
-            alert("Error placing order. Please try again.");
-        } finally {
-            setLoading(false);
+            alert("Something went wrong. Please try again.");
+            setLoading(false); // Reset loading so they can retry
         }
     };
 
