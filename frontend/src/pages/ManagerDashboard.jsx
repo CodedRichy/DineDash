@@ -69,19 +69,43 @@ const ManagerDashboard = () => {
 
     const handleSaveMenu = async (e) => {
         e.preventDefault();
+        if (!restaurant?.id) {
+            alert("Restaurant data not loaded. Please refresh.");
+            return;
+        }
+
+        const priceNum = parseFloat(editForm.price);
+        if (isNaN(priceNum) || priceNum < 0) {
+            alert("Please enter a valid price.");
+            return;
+        }
+
+        setLoading(true);
         try {
+            const formData = { 
+                ...editForm, 
+                price: priceNum,
+                restaurant_id: restaurant.id 
+            };
+            
             if (isEditing && editForm.id) {
-                await api.put(`/menu/${editForm.id}`, editForm);
+                await api.put(`/menu/${editForm.id}`, formData);
+                alert("Dish updated successfully!");
             } else {
-                await api.post(`/menu`, { ...editForm, restaurant_id: restaurant.id });
+                const { id, ...newDishData } = formData;
+                await api.post(`/menu`, newDishData);
+                alert("New dish added successfully!");
             }
-            // Refresh menu
+            
             const menuRes = await api.get(`/menu/${restaurant.id}`);
             setMenu(menuRes.data || []);
             setEditForm({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' });
             setIsEditing(false);
         } catch (err) {
             console.error("Error saving menu item", err);
+            alert(err.response?.data?.error || "Failed to save dish. Check your permissions.");
+        } finally {
+            setLoading(false);
         }
     };
 

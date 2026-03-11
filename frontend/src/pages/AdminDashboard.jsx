@@ -14,6 +14,7 @@ const AdminDashboard = () => {
     const [profile, setProfile] = useState(null);
 
     // Analytics State
+    const [error, setError] = useState(null);
     const [stats, setStats] = useState(null);
 
     // User & Search State
@@ -30,36 +31,44 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                navigate('/login');
-                return;
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    navigate('/login');
+                    return;
+                }
+
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (!profileData || profileData.role !== 'super_admin') {
+                    navigate('/');
+                    return;
+                }
+
+                setProfile(profileData);
+                fetchInitialData();
+            } catch (err) {
+                console.error("Auth check failed", err);
+                setError("Authentication failed. Please refresh.");
+                setLoading(false);
             }
-
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-            if (!profileData || profileData.role !== 'super_admin') {
-                navigate('/');
-                return;
-            }
-
-            setProfile(profileData);
-            fetchInitialData();
         };
         checkAuth();
     }, [navigate]);
 
     const fetchInitialData = async () => {
+        setLoading(true);
+        setError(null);
         try {
             await Promise.all([
-                fetchUsers(''),
-                fetchLogs(),
-                fetchRestaurants(),
-                fetchStats()
+                fetchUsers('').catch(e => { console.error(e); return []; }),
+                fetchLogs().catch(e => { console.error(e); return []; }),
+                fetchRestaurants().catch(e => { console.error(e); return []; }),
+                fetchStats().catch(e => { console.error(e); setError("Analytics load failed."); return null; })
             ]);
         } catch (err) {
             console.error(err);
@@ -196,7 +205,25 @@ const AdminDashboard = () => {
                 </button>
             </div>
 
-            {activeTab === 'overview' && stats && (
+            {error && (
+                <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 flex items-center">
+                    <AlertCircle className="w-5 h-5 mr-3" />
+                    <span className="font-bold">{error}</span>
+                </div>
+            )}
+
+            {activeTab === 'overview' && (
+                !stats ? (
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-20 text-center border-2 border-dashed border-gray-100 dark:border-white/5">
+                        <BarChart3 className="w-16 h-16 text-gray-200 dark:text-slate-700 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-gray-400">Analytics are currently unavailable</h3>
+                        <p className="text-gray-400 mt-2">There might be a connection issue or no data to display.</p>
+                        <button onClick={fetchInitialData} className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                ) : (
+
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                         <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow">
@@ -320,6 +347,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </>
+                )
             )}
 
             {activeTab === 'users' && (
@@ -345,6 +373,13 @@ const AdminDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
+                                {users.length === 0 && (
+                                    <tr>
+                                        <td colSpan="4" className="px-8 py-12 text-center text-gray-400 font-medium whitespace-nowrap">
+                                            No users found matching your search.
+                                        </td>
+                                    </tr>
+                                )}
                                 {users.map(u => (
                                     <tr key={u.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-700/50 transition-colors">
                                         <td className="px-8 py-6">
