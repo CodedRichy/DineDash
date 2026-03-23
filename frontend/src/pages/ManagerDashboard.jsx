@@ -44,6 +44,13 @@ const ManagerDashboard = () => {
 
             setProfile(profileData);
             fetchRestaurantData(profileData.managed_restaurant_id);
+            
+            // Set up polling for orders every 10 seconds
+            const interval = setInterval(() => {
+                fetchRestaurantData(profileData.managed_restaurant_id);
+            }, 10000);
+            
+            return () => clearInterval(interval);
         };
         checkAuth();
     }, [navigate]);
@@ -117,6 +124,20 @@ const ManagerDashboard = () => {
             setMenu(menuRes.data || []);
         } catch (err) {
             console.error("Error deleting", err);
+            alert("Failed to delete dish. Please try again.");
+        }
+    };
+
+    const handleUpdateOrderStatus = async (orderId, status) => {
+        try {
+            await api.put(`/orders/${orderId}/status`, { status });
+            alert(`Order ${status === 'preparing' ? 'accepted' : 'rejected'}!`);
+            // Refresh orders
+            const ordersRes = await api.get(`/orders/admin/${profile.managed_restaurant_id}`);
+            setOrders(ordersRes.data || []);
+        } catch (err) {
+            console.error("Error updating order", err);
+            alert(err.response?.data?.error || "Failed to update order status");
         }
     };
 
@@ -196,6 +217,27 @@ const ManagerDashboard = () => {
                                             </li>
                                         ))}
                                     </ul>
+                                    {order.status === 'pending' && (
+                                        <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                                            <button
+                                                onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                                                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors"
+                                            >
+                                                Accept Order
+                                            </button>
+                                            <button
+                                                onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}
+                                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-colors"
+                                            >
+                                                Reject Order
+                                            </button>
+                                        </div>
+                                    )}
+                                    {order.status === 'preparing' && (
+                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl text-center">
+                                            <p className="text-blue-700 font-bold">Waiting for rider pickup...</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))

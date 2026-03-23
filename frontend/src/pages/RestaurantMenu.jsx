@@ -28,8 +28,14 @@ const RestaurantMenu = () => {
             // Load cart (User-specific or Guest)
             const savedCart = JSON.parse(localStorage.getItem(`cart_${currentUserId}`)) || {};
             const savedResId = localStorage.getItem(`restaurant_id_${currentUserId}`);
+
+            // NORMALIZE: Convert array to object if needed
+            const normalizedCart = Array.isArray(savedCart) 
+                ? savedCart.reduce((obj, item) => ({ ...obj, [item.id]: item }), {})
+                : savedCart;
+
             if (savedResId === id) {
-                setCart(savedCart);
+                setCart(normalizedCart);
             }
 
             try {

@@ -8,14 +8,17 @@ const Home = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCuisine, setSelectedCuisine] = useState('All');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null); // ADD THIS
 
     useEffect(() => {
         const fetchRestaurants = async () => {
             try {
+                setError(null); // ADD THIS
                 const response = await api.get('/restaurants');
                 setRestaurants(response.data || []);
             } catch (err) {
                 console.error("Failed to fetch restaurants", err);
+                setError("Failed to load restaurants. Please try again."); // ADD THIS
             } finally {
                 setLoading(false);
             }
@@ -37,6 +40,21 @@ const Home = () => {
         return (
             <div className="flex justify-center items-center h-64 w-full">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-600"></div>
+            </div>
+        );
+    }
+
+    // ADD THIS ERROR DISPLAY
+    if (error) {
+        return (
+            <div className="max-w-2xl mx-auto p-12 text-center bg-white rounded-3xl shadow-sm border border-red-200 mt-12 dark:bg-slate-800 dark:border-red-900">
+                <p className="text-xl text-red-600 dark:text-red-400 font-bold mb-4">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold transition-colors"
+                >
+                    Retry
+                </button>
             </div>
         );
     }

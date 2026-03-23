@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Utensils, ShoppingBag, User, LogOut, Sun, Moon } from 'lucide-react';
+import { Utensils, ShoppingBag, User, LogOut, Sun, Moon, ListOrdered } from 'lucide-react';
 import { supabase } from '../api/supabase';
 
 const Navbar = () => {
@@ -63,7 +63,8 @@ const Navbar = () => {
             }
         };
 
-        if (!document.startViewTransition) {
+        // ADD SAFETY CHECK
+        if (!document.startViewTransition || document.hidden) {
             applyTheme();
             return;
         }
@@ -72,7 +73,13 @@ const Navbar = () => {
         document.documentElement.style.setProperty('--y', `${y}px`);
         document.documentElement.style.setProperty('--r', `${endRadius}px`);
 
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
+            applyTheme();
+        });
+        
+        // ADD CLEANUP
+        transition.finished.catch(() => {
+            // Transition was cancelled, ensure theme still applied
             applyTheme();
         });
     };
@@ -93,10 +100,16 @@ const Navbar = () => {
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     {!isAdmin && !isManager && !isDelivery && (
-                        <Link to="/checkout" className="flex items-center space-x-1 text-gray-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 transition font-medium">
-                            <ShoppingBag size={24} />
-                            <span className="hidden sm:inline-block">Cart</span>
-                        </Link>
+                        <>
+                            <Link to="/orders" className="flex items-center space-x-1 text-gray-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 transition font-medium">
+                                <ListOrdered size={24} />
+                                <span className="hidden sm:inline-block">My Orders</span>
+                            </Link>
+                            <Link to="/checkout" className="flex items-center space-x-1 text-gray-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 transition font-medium">
+                                <ShoppingBag size={24} />
+                                <span className="hidden sm:inline-block">Cart</span>
+                            </Link>
+                        </>
                     )}
 
                     {user ? (

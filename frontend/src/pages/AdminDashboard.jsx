@@ -64,56 +64,57 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            await Promise.all([
-                fetchUsers('').catch(e => { console.error(e); return []; }),
-                fetchLogs().catch(e => { console.error(e); return []; }),
-                fetchRestaurants().catch(e => { console.error(e); return []; }),
-                fetchStats().catch(e => { console.error(e); setError("Analytics load failed."); return null; })
+            const results = await Promise.allSettled([
+                fetchUsers(''),
+                fetchLogs(),
+                fetchRestaurants(),
+                fetchStats()
             ]);
+            
+            // Check if critical operations failed
+            const criticalFailures = results.filter((r, idx) => 
+                r && r.status === 'rejected' && idx !== 3 // Allow stats to fail
+            );
+            
+            if (criticalFailures.length > 0) {
+                console.error('Critical data fetch failures:', criticalFailures);
+                setError('Failed to load dashboard data. Please refresh.');
+            }
+            
+            // Handle stats failure separately
+            if (results[3] && results[3].status === 'rejected') {
+                console.error('Stats fetch failed:', results[3].reason);
+                setError('Analytics temporarily unavailable.');
+            }
         } catch (err) {
-            console.error(err);
+            console.error('Unexpected error in fetchInitialData:', err);
+            setError('An unexpected error occurred. Please refresh.');
         } finally {
             setLoading(false);
         }
     };
 
     const fetchUsers = async (query = '') => {
-        try {
-            const res = await api.get(`/users?search=${query}`);
-            setUsers(res.data || []);
-        } catch (err) {
-            console.error("Error fetching users", err);
-        }
+        const res = await api.get(`/users?search=${query}`);
+        setUsers(res.data || []);
     };
 
     const fetchLogs = async () => {
-        try {
-            const res = await api.get('/users/logs');
-            setLogs(res.data || []);
-        } catch (err) {
-            console.error("Error fetching logs", err);
-        }
+        const res = await api.get('/users/logs');
+        setLogs(res.data || []);
     };
 
     const fetchStats = async () => {
-        try {
-            const res = await api.get('/analytics/stats');
-            setStats(res.data);
-        } catch (err) {
-            console.error("Error fetching stats", err);
-        }
+        const res = await api.get('/analytics/stats');
+        setStats(res.data);
     };
 
     const fetchRestaurants = async () => {
-        try {
-            const res = await api.get('/restaurants');
-            setRestaurants(res.data || []);
-            if (res.data.length > 0) {
-                setSelectedRes(res.data[0].id);
-                fetchResDetails(res.data[0].id);
-            }
-        } catch (err) {
-            console.error("Error fetching restaurants", err);
+        const res = await api.get('/restaurants');
+        setRestaurants(res.data || []);
+        if (res.data.length > 0) {
+            setSelectedRes(res.data[0].id);
+            await fetchResDetails(res.data[0].id);
         }
     };
 

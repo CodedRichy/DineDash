@@ -16,28 +16,36 @@ const Checkout = () => {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                // Not logged in, redirect to login
                 navigate('/login?redirect=checkout');
                 return;
             }
             const currentUserId = session.user.id;
             setUserId(currentUserId);
 
-            // GUEST MIGRATION: If there's a guest cart, move it to the user's ID
-            const guestCart = localStorage.getItem('cart_guest');
-            const guestResId = localStorage.getItem('restaurant_id_guest');
-            if (guestCart) {
-                localStorage.setItem(`cart_${currentUserId}`, guestCart);
-                localStorage.setItem(`restaurant_id_${currentUserId}`, guestResId);
-                localStorage.removeItem('cart_guest');
-                localStorage.removeItem('restaurant_id_guest');
+            // UPDATED GUEST MIGRATION with lock check
+            const migrationKey = 'cart_migration_in_progress';
+            const isMigrating = sessionStorage.getItem(migrationKey);
+            
+            if (!isMigrating) {
+                sessionStorage.setItem(migrationKey, 'true');
+                
+                const guestCart = localStorage.getItem('cart_guest');
+                const guestResId = localStorage.getItem('restaurant_id_guest');
+                
+                if (guestCart) {
+                    localStorage.setItem(`cart_${currentUserId}`, guestCart);
+                    localStorage.setItem(`restaurant_id_${currentUserId}`, guestResId);
+                    localStorage.removeItem('cart_guest');
+                    localStorage.removeItem('restaurant_id_guest');
+                }
+                
+                sessionStorage.removeItem(migrationKey);
             }
 
-            // Load user-specific cart ONLY after we know who the user is
+            // Load user-specific cart
             const items = JSON.parse(localStorage.getItem(`cart_${currentUserId}`)) || [];
             const resId = localStorage.getItem(`restaurant_id_${currentUserId}`);
 
-            // Handle if items is an object (from the new RestaurantMenu logic) or an array (legacy)
             const cartArray = Array.isArray(items) ? items : Object.values(items);
 
             setCartItems(cartArray);

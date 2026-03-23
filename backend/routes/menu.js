@@ -25,6 +25,11 @@ module.exports = (supabase, checkRole) => {
         try {
             const { restaurant_id, name, description, price, category, is_available, image_url } = req.body;
 
+            // ADD THIS VALIDATION
+            if (!restaurant_id) {
+                return res.status(400).json({ error: "restaurant_id is required" });
+            }
+
             console.log(`[MENU] Create request by ${req.user.id} (${req.userRole}) for restaurant ${restaurant_id}`);
 
             // Safety: Managers can only add to their own restaurant
