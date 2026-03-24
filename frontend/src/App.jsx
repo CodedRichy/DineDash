@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import RestaurantMenu from './pages/RestaurantMenu';
 import Checkout from './pages/Checkout';
 import OrderStatus from './pages/OrderStatus';
+import MyOrders from './pages/MyOrders';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -24,6 +25,7 @@ function App() {
             <Route path="/restaurant/:id" element={<RestaurantMenu />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order/:id" element={<OrderStatus />} />
+            <Route path="/orders" element={<MyOrders />} />
           </Routes>
         </main>
       </div>
