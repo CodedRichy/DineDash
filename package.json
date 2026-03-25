@@ -8,6 +8,13 @@
         "dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
         "install:all": "npm install --prefix backend && npm install --prefix frontend"
     },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.98.0",
+        "cors": "^2.8.6",
+        "dotenv": "^17.3.1",
+        "express": "^5.2.1",
+        "serverless-http": "^3.2.0"
+    },
     "devDependencies": {
         "concurrently": "^8.2.2"
     }
